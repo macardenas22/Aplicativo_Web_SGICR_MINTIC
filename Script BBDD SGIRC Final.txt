@@ -1,0 +1,265 @@
+CREATE DATABASE mintic_sgicr;
+USE `mintic_sgicr`;
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`perfil`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`perfil` (
+  `idperfil` INT NOT NULL,
+  `nombre` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`idperfil`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`usuario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`usuario` (
+  `idusuario` VARCHAR(15) NOT NULL,
+  `nombre` VARCHAR(50) NOT NULL,
+  `telefono` VARCHAR(15) NOT NULL,
+  `email` VARCHAR(50) NOT NULL,
+  `password` VARCHAR(8) NOT NULL,
+  `idperfil` INT NOT NULL,
+  `activo` BIT NOT NULL,
+  PRIMARY KEY (`idusuario`),
+  CONSTRAINT `usuarios_perfiles_fk`
+    FOREIGN KEY (`idperfil`)
+    REFERENCES `mintic_sgicr`.`perfil` (`idperfil`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`login_acceso`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`login_acceso` (
+  `idlogin` INT NOT NULL AUTO_INCREMENT,
+  `idusuario` VARCHAR(15) NOT NULL,
+  `fechaacceso` DATETIME NOT NULL,
+  PRIMARY KEY (`idlogin`),
+
+  CONSTRAINT `login_usuarios_fk`
+    FOREIGN KEY (`idusuario`)
+    REFERENCES `mintic_sgicr`.`usuario` (`idusuario`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`ciudad`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`ciudad` (
+  `idciudad` VARCHAR(5) NOT NULL,
+  `nombre` VARCHAR(50) NOT NULL,
+  `departamento` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`idciudad`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`propietario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`propietario` (
+  `idpropietario` VARCHAR(15) NOT NULL,
+  `nombre` VARCHAR(50) NOT NULL,
+  `direccion` VARCHAR(50) NOT NULL,
+  `idciudad` VARCHAR(5) NOT NULL,
+  `celular` VARCHAR(20) NOT NULL,
+  `email` VARCHAR(50) NOT NULL,
+  `fechaNacimiento` DATE NOT NULL,
+  PRIMARY KEY (`idpropietario`),
+  CONSTRAINT `propietarios_ciudad_fk`
+    FOREIGN KEY (`idciudad`)
+    REFERENCES `mintic_sgicr`.`ciudad` (`idciudad`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`conjunto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`conjunto` (
+  `idconjunto` VARCHAR(15) NOT NULL,
+  `nombre` VARCHAR(50) NOT NULL,
+  `direccion` VARCHAR(50) NOT NULL,
+  `idciudad` VARCHAR(5) NOT NULL,
+  `email` VARCHAR(50) NOT NULL,
+  `celular` VARCHAR(20) NOT NULL,
+  `estrato` INT NOT NULL,
+  `total_aptos` INT NOT NULL,
+  `total_torres` INT NOT NULL,
+  `area_aptos_mts` DOUBLE NOT NULL,
+  `cant_tipo_aptos` INT NOT NULL,
+  PRIMARY KEY (`idconjunto`),
+  CONSTRAINT `conjunto_ciudad_fk`
+    FOREIGN KEY (`idciudad`)
+    REFERENCES `mintic_sgicr`.`ciudad` (`idciudad`));
+
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`tipo_apto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`tipo_apto` (
+  `idtipoapto` INT NOT NULL,
+  `metros` FLOAT NOT NULL,
+  PRIMARY KEY (`idtipoapto`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`coeficiente`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`coeficiente` (
+  `idcoeficiente` VARCHAR(15) NOT NULL,
+  `idconjunto` VARCHAR(15) NOT NULL,
+  `idtipoapto` INT NOT NULL,
+  `porcent_coeficiente` DOUBLE NOT NULL,
+  `cant_aptos` INT NOT NULL,
+  `importe_admon_mes` DOUBLE NOT NULL,
+  `importe_Admon_anual` DOUBLE NOT NULL,
+  `base_presupuestal` DOUBLE NOT NULL,
+  `vigencia` INT NOT NULL,
+  PRIMARY KEY (`idcoeficiente`),
+
+  CONSTRAINT `coeficiente_tipoapto_fk`
+    FOREIGN KEY (`idtipoapto`)
+    REFERENCES `mintic_sgicr`.`tipo_apto` (`idtipoapto`),
+
+  CONSTRAINT `coeficiente_conjunto_fk`
+    FOREIGN KEY (`idconjunto`)
+    REFERENCES `mintic_sgicr`.`conjunto` (`idconjunto`));
+
+
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`apartamento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`apartamento` (
+  `idapartamento` VARCHAR(15) NOT NULL,
+  `idpropietario` VARCHAR(15) NOT NULL,
+  `idconjunto` VARCHAR(15) NOT NULL,
+  `idcoeficiente` VARCHAR(15) NOT NULL,
+  `idtipoapto` INT NOT NULL,
+  `torre` INT NOT NULL,
+  `apartamento` INT NOT NULL,
+  PRIMARY KEY (`idapartamento`),
+
+  CONSTRAINT `apartamento_propietario_fk`
+    FOREIGN KEY (`idpropietario`)
+    REFERENCES `mintic_sgicr`.`propietario` (`idpropietario`),
+
+  CONSTRAINT `apartamento_conjunto_fk`
+    FOREIGN KEY (`idconjunto`)
+    REFERENCES `mintic_sgicr`.`conjunto` (`idconjunto`),
+
+  CONSTRAINT `apartamento_coeficiente_fk`
+    FOREIGN KEY (`idcoeficiente`)
+    REFERENCES `mintic_sgicr`.`coeficiente` (`idcoeficiente`),
+  CONSTRAINT `apartamento_tipoAprto_fk`
+    FOREIGN KEY (`idtipoapto`)
+    REFERENCES `mintic_sgicr`.`tipo_apto` (`idtipoapto`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`concepto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`concepto` (
+  `idconcepto` INT NOT NULL,
+  `descripcion` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`idconcepto`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`cuenta_cobro`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`cuenta_cobro` (
+  `idcuentacobro` INT NOT NULL AUTO_INCREMENT,
+  `idapartamento` VARCHAR(15) NOT NULL,
+  `idconcepto` INT NOT NULL,
+  `fecha_cobro` DATE NULL,
+  `fecha_limite` DATE NULL,
+  PRIMARY KEY (`idcuentacobro`),
+
+  CONSTRAINT `CuentaCobro_concepto_fk`
+    FOREIGN KEY (`idconcepto`)
+    REFERENCES `mintic_sgicr`.`concepto` (`idconcepto`),
+
+  CONSTRAINT `CuentaCobro_apartamento_fk`
+    FOREIGN KEY (`idapartamento`)
+    REFERENCES `mintic_sgicr`.`apartamento` (`idapartamento`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`recaudo_pago`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`recaudo_pago` (
+  `idpago` INT NOT NULL AUTO_INCREMENT,
+  `idcuentacobro` INT NOT NULL,
+  `idapartamento` VARCHAR(15) NOT NULL,
+  `idconcepto` INT NOT NULL,
+  `fechaPago` DATE NOT NULL,
+  `importe` DOUBLE NOT NULL,
+  PRIMARY KEY (`idpago`),
+
+  CONSTRAINT `recaudopago_cuentacobro_fk`
+    FOREIGN KEY (`idcuentacobro`)
+    REFERENCES `mintic_sgicr`.`cuenta_cobro` (`idcuentacobro`),
+    
+  CONSTRAINT `recaudopago_apartamento`
+    FOREIGN KEY (`idapartamento`)
+    REFERENCES `mintic_sgicr`.`apartamento` (`idapartamento`),
+
+  CONSTRAINT `recaudopago_concepto_fk`
+    FOREIGN KEY (`idconcepto`)
+    REFERENCES `mintic_sgicr`.`concepto` (`idconcepto`));
+
+-- -----------------------------------------------------
+-- Table `mintic_sgicr`.`cartera`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `mintic_sgicr`.`cartera` (
+  `idcuentacobro` INT NOT NULL,
+  `idpago` INT NOT NULL,
+  PRIMARY KEY (`idcuentacobro`, `idpago`),
+
+  CONSTRAINT `cartera_cuentacobro_fk`
+    FOREIGN KEY (`idcuentacobro`)
+    REFERENCES `mintic_sgicr`.`cuenta_cobro` (`idcuentacobro`),
+
+  CONSTRAINT `cartera_recaudopago_fk`
+    FOREIGN KEY (`idpago`)
+    REFERENCES `mintic_sgicr`.`recaudo_pago` (`idpago`));
+
+
+
+--llenado de tablas
+use mintic_sgicr;
+
+insert into ciudad (idciudad,nombre,departamento)
+values ('05001','Medellin','Antioquia'),('11001','Bogotá','Bogotá D.C.'),('13001','Cartagena de Indias','Bolivar'),('15001','Tunja','Boyaca'),('68001','Bucaramanga','Santander'),('76001','Cali','Valle del Cauca');
+
+
+insert into propietario (idpropietario,nombre,direccion,idciudad,celular,email,fechanacimiento)
+values ('80832072','Mauricio Cardenas','Carrera 68 No 9 - 51','05001','3174324793','mac@sgirc.com','1985-05-22');
+
+insert into conjunto 
+values ('800951423','Villa del Conde','Calle 8 #93 - 15','05001','administracion@villaconde.com.co','3005289675',4,250,6,16935,4);
+
+insert into concepto (idconcepto,descripcion)
+values (2,'Cuota Extraordinaria');
+
+insert into tipo_apto
+values (1,90),(2,72),(3,55), (4,32),(5,	100);
+
+insert into coeficiente
+values ('11','800951423',1,0.001889577797,10,110225,1322704,700000000,2022);
+
+insert into apartamento 
+Values ('13303','80832072','800951423','11',1,3,303);
+
+insert into cuenta_cobro
+values (1,'13303',2,'2022-10-01','2022-10-31');
+
+insert into recaudo_pago
+values (1,1,'13303',2,'2022-10-15','200000');
+
+insert into cartera
+values (1,1);
+
+insert into perfil
+values (1,'Administrador'),(2,'Consultor');
+
+insert into usuario
+values ('1030524963','Diego Armando Diaz Diaz', '3005821963','Diego.diaz@sgicr.com.co','Diaz2022','1',1);
+insert into usuario
+values ('80832072','Mauricio Cárdenas Alvarado', '3173648576','macardenas@sgicr.com.co','andrew25','1',1);
+
+
+insert into login_acceso (idusuario,fechaacceso)
+values ('1030524963','2022-10-15 13:11:00');
+
+insert into login_acceso (idusuario,fechaacceso)
+Values('80832072','2022-10-22 23:11:00');
+
